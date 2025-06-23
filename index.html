@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- <title>Loan Interest Calculator</title> -->
+        <title>Loan Schedule Generator</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+        <style id="common">
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+                margin: 0;
+                padding: 20px;
+            }
+            h1,
+            h2 {
+                color: #333;
+				text-align: center;
+            }
+            form {
+                background: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                margin-bottom: 20px;
+            }
+            label {
+                display: block;
+                margin-bottom: 8px;
+                color: #555;
+            }
+            input,
+            select,
+            button {
+                width: 100%;
+                width: calc(100% - 20px);
+                padding: 10px;
+                margin-bottom: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+            button {
+                background-color: #28a745;
+                color: #fff;
+                border: none;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #218838;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+            table,
+            th,
+            td {
+                border: 1px solid #ddd;
+            }
+            th,
+            td {
+                padding: 10px;
+                text-align: center;
+            }
+            th {
+                background-color: #f8f9fa;
+            }
+            canvas {
+                margin-bottom: 20px;
+            }
+            .form-row {
+                display: flex;
+                justify-content: space-between;
+            }
+            .form-row > div {
+                width: 48%;
+            }
+            .action-buttons {
+                display: flex;
+                justify-content: space-between;
+            }
+            .action-buttons button {
+                flex: 1;
+                padding: 10px;
+                margin-right: 10px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            .action-buttons button:last-child {
+                margin-right: 0;
+            }
+            .action-buttons button.genSchd {
+                background-color: #28a745;
+                color: #fff;
+            }
+            .action-buttons button.download-csv {
+                background-color: #dc3545;
+                color: #fff;
+            }
+            .action-buttons button.download-pdf {
+                background-color: #007bff;
+                color: #fff;
+            }
+            .action-buttons button.add-addlpay {
+                background-color: #7ca7d9;
+                color: #fff;
+            }
+            .action-buttons button.darkmode {
+                background-color: #28a745;
+                color: #fff;
+            }
+            .form-group {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+            }
+            .form-group label {
+                flex: 1;
+                margin-right: 10px;
+                color: #555;
+            }
+            .form-group input,
+            .form-group select {
+                flex: 2;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+            .form-group.radio-group {
+                flex-direction: column;
+            }
+            .form-group.radio-group label {
+                margin-bottom: 5px;
+            }
+            .form-group.radio-group input {
+                margin-right: 50px;
+            }
+            .form-group.radio-group .radio-options {
+                display: flex;
+                justify-content: space-between;
+            }
+            .form-group.radio-group .radio-options label {
+                flex: 1;
+                display: flex;
+            }
+            .remove-btn {
+                cursor: pointer;
+                color: red;
+            }
+        </style>
+        <style id="darkmode">
+            .dark-mode {
+                background-color: #333;
+                color: #f4f4f9;
+            }
+            .dark-mode form {
+                background: #444;
+                color: #f4f4f9;
+            }
+            .dark-mode input,
+            .dark-mode select,
+            .dark-mode button {
+                background: #555;
+                color: #f4f4f9;
+                border: 1px solid #666;
+            }
+            .dark-mode th {
+                background-color: #555;
+            }
+            .dark-mode #addlPayTable th {
+                background-color: #555;
+            }
+            body.dark-mode {
+                background-color: #121212;
+                color: #ffffff;
+            }
+            body.dark-mode h1,
+            body.dark-mode h2,
+            body.dark-mode table,
+            body.dark-mode label {
+                color: #ffffff;
+            }
+            body.dark-mode input,
+            body.dark-mode select,
+            body.dark-mode textarea {
+                background-color: #333333;
+                color: #ffffff;
+                border: 1px solid #555555;
+            }
+        </style>
+        <style id="addlPayTable">
+            #addlPayTable td {
+                padding: 10px;
+                text-align: center;
+                padding-top: 10;
+                padding-bottom: 0;
+            }
+            #addlPayTable th {
+                background-color: #7ca7d9;
+            }
+            #addlPayTable input,
+            #addlPayTable select {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            #addlPayTable tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+            #addlPayTable tr:hover {
+                background-color: #ddd;
+            }
+        </style>
+    </head>
+    <body>
+		<div>
+			<h1>Loan Schedule Generator</h1>
+		</div>
+        <form id="loanForm">
+            <div class="form-row">
+                <div>
+                    <label for="principal">Principal Amount:</label>
+                    <input type="number" id="principal" name="principal" value="1568929" required />
+                </div>
+                <div>
+                    <label for="businessDate">Last Modified Date of the Principal Amount:</label>
+                    <input type="date" id="businessDate" name="businessDate" value="2025-06-30" required />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label for="interestRate">Interest Rate (% per annum):</label>
+                    <input type="number" id="interestRate" name="interestRate" value="8.6" step="0.01" required />
+                </div>
+                <div>
+                    <label for="emiAmount">EMI Amount:</label>
+                    <input type="number" id="emiAmount" name="emiAmount" value="26000" required />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label for="emiDate">EMI Repayment Date (1-30):</label>
+                    <input type="number" id="emiDate" name="emiDate" value="1" min="1" max="30" required />
+                </div>
+                <div>
+                    <label for="interestAdjustment">Interest Adjustment Amount:</label>
+                    <input type="number" id="interestAdjustment" name="interestAdjustment" value="6" required />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group radio-group">
+                    <label>Interest Adjustment Type:</label>
+                    <select class="adjType" style="width: calc(100% + 0px);">
+                        <option selected value="floor">Floor</option>
+                        <option value="roof">Roof</option>
+                    </select>
+                    <!-- <div class="radio-options">
+					<label><input type="radio" name="interestAdjustmentType" value="floor" checked> Floor</label>
+					<label><input type="radio" name="interestAdjustmentType" value="roof"> Roof</label>
+				</div> -->
+                </div>
+                <div class="form-group radio-group">
+                    <label>Interest Calculation Type:</label>
+                    <select class="calcType" style="width: calc(100% + 0px);">
+                        <option value="360">30/360</option>
+                        <option selected value="365">30/365</option>
+                    </select>
+                    <!-- <div class="radio-options">
+					<label><input type="radio" name="interestCalcType" value="30/360"> 30/360</label>
+					<label><input type="radio" name="interestCalcType" value="30/365" checked> 30/365</label>
+				</div> -->
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label for="intCalcDay">Interest Calculation Day (1-31):</label>
+                    <input type="number" id="intCalcDay" name="intCalcDay" value="31" min="1" max="31" required />
+                </div>
+                <!-- <div class="form-group radio-group">
+                <label>Interest Payment Required on Last Repayment:</label>
+                <div class="radio-options">
+					<label><input type="radio" name="intPay" value="yes"> Yes</label>
+					<label><input type="radio" name="intPay" value="no" checked> No</label>
+				</div>
+            </div> -->
+                <div>
+                    <label for="addAddlPay">By clicking the below button to add n number of additional payments:</label>
+                    <div class="action-buttons">
+                        <button type="button" id="addAddlPay" class="action-buttons, add-addlpay" onclick="addAddlPayment()">Add Additional Payments</button>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <table id="addlPayTable" border="1">
+                    <thead>
+                        <tr>
+                            <th>Addl Pay No.</th>
+                            <th>Date</th>
+                            <th>Cr/Dr</th>
+                            <th>Txn Amount</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payments">
+                        <!-- <td>0</td>
+					<td><input type="date" class="payDate" value="2025-07-20"></td>
+					<td>
+						<select class="payType">
+							<option value="Dr">Dr</option>
+							<option value="Cr">Cr</option>
+						</select>
+					</td>
+					<td><input type="number" class="payAmount" value="20000"></td>
+					<td><span class="remove-btn"> X - Delete </span></td> -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="action-buttons">
+                <button type="button" class="genSchd" onclick="generateSchedule()">Generate Schedule</button>
+                <button type="button" class="download-pdf" onclick="downloadPDF()">Download PDF</button>
+                <button type="button" class="download-csv" onclick="downloadCSV()">Download CSV</button>
+                <button type="button" class="darkmode" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+            </div>
+        </form>
+
+		<form class="form-row">
+			<div>
+				<label id="total_paid_interest_label">Total Paid Interest: 0</label>
+			</div>
+			<div>
+				<label id="total_paid_principal_label">Total Paid Amount: 0</label>
+			</div>
+			<div>
+				<label id="emi_count_label">Total EMI Count: 0</label>
+			</div>
+			<div>
+				<label id="last_repayment_date_label">Last Repayment Date: N/A</label>
+			</div>
+        </form>
+			
+        <h2>Loan Statement</h2>
+        <table id="scheduleTable" border="1">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>EMI</th>
+                    <th>Date</th>
+                    <th>Txn Desc</th>
+                    <th>Cr/Dr</th>
+                    <th>Txn Amount</th>
+                    <th>Actual Int.</th>
+                    <th>Calculated Int.</th>
+                    <th>Adjusted Int.</th>
+                    <th>Outstanding Principal</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <div>
+            <canvas id="donutChart" width="400" height="400"></canvas>
+        </div>
+
+        <div hidden>
+            <canvas style="display: none;" id="loanPieChart" width="400" height="400"></canvas>
+        </div>
+
+        <script>
+            Chart.register(ChartDataLabels);
+
+            let donutChart;
+            let pieChart;
+            let paymentCount = 0;
+			
+			let INR = new Intl.NumberFormat('en-US', {
+				style: 'currency',
+				currency: 'INR',
+			});
+
+            function toggleDarkMode() {
+                document.body.classList.toggle("dark-mode");
+            }
+
+            function addAddlPayment() {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+					<td>${paymentCount + 1}</td>
+					<td><input type="date" class="payDate" value="2025-07-20" onchange="validateAddlPaymentDate(this)"></td>
+					<td>
+						<select class="payType">
+							<option value="Dr">Dr</option>
+							<option value="Cr">Cr</option>
+						</select>
+					</td>
+					<td><input type="number" class="payAmount" value="20000"></td>
+					<td><span class="remove-btn" onclick="removeAddlPayment(this.parentElement)">Delete </span></td>`;
+                document.getElementById("payments").appendChild(tr);
+                paymentCount++;
+            }
+
+            function removeAddlPayment(element) {
+                element.parentElement.remove();
+                paymentCount--;
+                updateAddlPaymentLabels();
+            }
+
+            function updateAddlPaymentLabels() {
+                const paymentTrs = document.querySelectorAll("#payments > tr");
+                paymentTrs.forEach((tr, index) => {
+                    tr.querySelector("td").innerText = `${index + 1}. `;
+                });
+            }
+
+            function validateAddlPaymentDate(input) {
+                const startDate = new Date(document.getElementById("businessDate").value);
+                const paymentDate = new Date(input.value);
+                if (paymentDate < startDate) {
+                    alert("Additional Payment date cannot be earlier than the Principal Amount Last Modified Date.");
+                    input.value = "";
+                }
+            }
+
+            function collectAddlPayDtls() {
+                let payments = [];
+                document.querySelectorAll("#payments > tr").forEach((tr) => {
+                    const date = new Date(tr.querySelector(".payDate").value);
+                    const amount = parseFloat(tr.querySelector(".payAmount").value);
+                    const type = tr.querySelector(".payType").value;
+                    if (!isNaN(date) && !isNaN(amount)) {
+                        payments.push({ date, amount, type });
+                    }
+                });
+
+                payments.sort((a, b) => a.date - b.date);
+                return payments;
+            }
+
+            function interest_calc(principal, days, interest, intType) {
+                return principal * days * (interest / (intType * 100));
+            }
+
+            function date_diff(date1, date2) {
+                const diffDays = (date1 - date2) / (1000 * 60 * 60 * 24);
+                return diffDays;
+            }
+
+            function generateSchedule() {
+                const principal = parseFloat(document.getElementById("principal").value);
+                const rate = parseFloat(document.getElementById("interestRate").value);
+                let emi = parseFloat(document.getElementById("emiAmount").value);
+                const startDate = new Date(document.getElementById("businessDate").value);
+                const repayDay = parseInt(document.getElementById("emiDate").value);
+                const floor = parseInt(document.getElementById("interestAdjustment").value);
+                // const intCalType = document.querySelector('calcType').value;
+                // const intAdjType = document.querySelector('adjType').value;
+                const intCalType = 365;
+                const intAdjType = "floor";
+                const interestCalcDay = parseInt(document.getElementById("intCalcDay").value);
+
+                let payments = collectAddlPayDtls();
+                let outstanding = principal;
+                let schedule = [];
+                let currentDate = new Date(startDate);
+                let sr = 1;
+                let emiNo = 1;
+
+                const endDate = new Date(startDate);
+                endDate.setFullYear(endDate.getFullYear() + 1); // 1 year schedule
+
+                // Initial Loan Details
+                schedule.push({
+                    sr: sr++,
+                    emi: "-",
+                    date: new Date(startDate),
+                    desc: "-", //'Initial Loan Details',
+                    type: "-",
+                    txnAmount: "-",
+                    interest: "-",
+                    calInt: "-",
+                    adjInt: "-",
+                    balance: Math.round(outstanding),
+                });
+
+                let lastTxnDate = new Date(startDate);
+                let lastOutstanding = outstanding;
+                let consolidated_interest = 0;
+
+                while (outstanding > 0) {
+                    //while (currentDate <= endDate && outstanding > 0) {
+                    // EMI Repayment
+                    if (currentDate.getDate() === repayDay) {
+                        let calInt = "-";
+                        let adjInt = "-";
+                        const days = date_diff(currentDate, lastTxnDate);
+                        const interest = interest_calc(lastOutstanding, days, rate, intCalType);
+                        //consolidated_interest += interest; // Do the last repayment with Interest
+
+                        if (outstanding < emi) {
+                            emi = outstanding + Math.round(consolidated_interest);
+                            calInt = consolidated_interest.toFixed(2);
+                            adjInt = (Math.round(consolidated_interest) - consolidated_interest).toFixed(2);
+                        }
+
+                        consolidated_interest += interest; // Do the last repayment without Interest
+                        outstanding -= emi;
+                        schedule.push({
+                            sr: sr++,
+                            emi: emiNo++,
+                            date: new Date(currentDate),
+                            desc: "REPAYMENT",
+                            type: "Dr",
+                            txnAmount: emi,
+                            interest: interest.toFixed(2),
+                            calInt: calInt,
+                            adjInt: adjInt,
+                            balance: Math.round(outstanding),
+                        });
+                        lastTxnDate = new Date(currentDate);
+                        lastOutstanding = outstanding;
+                    }
+
+                    // Additional Payments
+                    payments.forEach((p, i) => {
+                        if (p.date.toDateString() === currentDate.toDateString()) {
+                            const days = date_diff(currentDate, lastTxnDate);
+                            const interest = interest_calc(lastOutstanding, days, rate, intCalType);
+                            //const interest = (lastOutstanding * days * rate / intCalType);
+                            consolidated_interest += interest;
+                            outstanding += p.type === "Dr" ? -p.amount : p.amount;
+                            schedule.push({
+                                sr: sr++,
+                                emi: "-",
+                                date: new Date(currentDate),
+                                desc: "ADDITIONAL PAYMENT",
+                                type: p.type,
+                                txnAmount: p.amount,
+                                interest: interest.toFixed(2),
+                                calInt: "-",
+                                adjInt: "-",
+                                balance: Math.round(outstanding),
+                            });
+                            lastTxnDate = new Date(currentDate);
+                            lastOutstanding = outstanding;
+                            payments.splice(i, 1);
+                        }
+                    });
+
+                    const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+                    const interestPostDay = Math.min(interestCalcDay, lastDayOfMonth);
+
+                    // Interest at month-end
+                    const nextDate = new Date(currentDate);
+                    nextDate.setDate(currentDate.getDate() + 1);
+                    //if (nextDate.getDate() === 1 && currentDate.getTime() !== startDate.getTime()) {
+                    if (currentDate.getDate() === interestPostDay && currentDate.getTime() !== startDate.getTime()) {
+                        let interest = 0;
+                        let segmentStart = new Date(lastTxnDate);
+                        let segmentOutstanding = lastOutstanding;
+
+                        /*
+						  // Include all transactions in the current month
+						  const monthEnd = new Date(currentDate);
+						  const monthTxns = schedule.filter(row =>
+							row.date > segmentStart && row.date <= monthEnd &&
+							(row.desc === 'REPAYMENT' || row.desc === 'ADDITIONAL PAYMENT')
+						  );
+
+						  monthTxns.push({ date: new Date(currentDate), balance: outstanding }); // end of month
+
+						  for (let txn of monthTxns) {
+							const days = (txn.date - segmentStart) / (1000 * 60 * 60 * 24);
+							console.log(sr + " -> " + days);
+							//const segmentInterest = Math.max(floor, Math.round(segmentOutstanding * days * rate / intCalType));
+							const segmentInterest = (segmentOutstanding * days * rate / intCalType);
+							interest += segmentInterest;
+							segmentStart = txn.date;
+							segmentOutstanding = txn.balance;
+						  }
+						  */
+
+                        const days = date_diff(currentDate, lastTxnDate);
+                        interest = interest_calc(lastOutstanding, days, rate, intCalType);
+                        //interest = (lastOutstanding * rate / intCalType * days);
+
+                        consolidated_interest += interest;
+                        let txnAmt = intAdjType === "floor" ? Math.floor(consolidated_interest - floor) : Math.ceil(consolidated_interest - floor);
+
+                        //outstanding += interest;
+                        outstanding += txnAmt;
+
+                        schedule.push({
+                            sr: sr++,
+                            emi: "-",
+                            date: new Date(currentDate),
+                            desc: "INTEREST",
+                            type: "Cr",
+                            txnAmount: txnAmt,
+                            interest: interest.toFixed(2),
+                            calInt: consolidated_interest.toFixed(2),
+                            adjInt: (txnAmt - consolidated_interest).toFixed(2),
+                            balance: Math.round(outstanding),
+                        });
+
+                        lastTxnDate = new Date(currentDate);
+                        lastOutstanding = outstanding;
+                        consolidated_interest = 0;
+                    }
+
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                // Render table
+                const tbody = document.querySelector("#scheduleTable tbody");
+                tbody.innerHTML = "";
+                
+				schedule.forEach(row => {
+					const newRow = tbody.insertRow();
+					newRow.insertCell(0).innerText = row.sr;
+					newRow.insertCell(1).innerText = row.emi;
+					newRow.insertCell(2).innerText = row.date.toISOString().split("T")[0];
+					newRow.insertCell(3).innerText = row.desc;
+					newRow.insertCell(4).innerText = row.type;
+					newRow.insertCell(5).innerText = row.txnAmount;
+					newRow.insertCell(6).innerText = row.interest;
+					newRow.insertCell(7).innerText = row.calInt;
+					newRow.insertCell(8).innerText = row.adjInt;
+					newRow.insertCell(9).innerText = Math.round(row.balance);
+				});
+
+                // Calculate total Dr and Cr amounts for the pie chart
+                const totalDr = schedule.filter((row) => row.type === "Dr").reduce((sum, row) => sum + row.txnAmount, 0);
+                const totalCr = schedule.filter((row) => row.type === "Cr").reduce((sum, row) => sum + row.txnAmount, 0);
+
+                generatePieChart(totalDr, totalCr);
+                generateDonutChart(totalDr, totalCr);
+
+                document.getElementById("total_paid_interest_label").innerText = "Total Paid Interest: " + (INR.format(totalCr.toFixed(2))) + " (" + ((totalCr / totalDr) * 100).toFixed(2) + "%)";
+                document.getElementById("total_paid_principal_label").innerText = "Total Paid Amount: " + (INR.format(totalDr.toFixed(2)));
+                document.getElementById("emi_count_label").innerText = "Total EMI Count: " + (emiNo - 1) + " (" + Math.floor((emiNo - 1)/12) + " Years, " + ((emiNo - 1)%12) + " Months)";
+                document.getElementById("last_repayment_date_label").innerText = "Last Repayment Date: " + lastTxnDate.toDateString();
+            }
+
+            function generatePieChart(totalDr, totalCr) {
+                // Generate the pie chart
+                const ctx = document.getElementById("loanPieChart").getContext("2d");
+                if (pieChart) {
+                    pieChart.destroy();
+                }
+                pieChart = new Chart(ctx, {
+                    type: "pie",
+                    data: {
+                        labels: ["Total Pricipal Amount " + (totalDr - totalCr), "Total Interest Amount " + totalCr, "Total Paid Amount " + totalDr],
+                        datasets: [
+                            {
+                                data: [totalDr - totalCr, totalCr],
+                                backgroundColor: ["#FF6384", "#36A2EB"],
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                    },
+                });
+            }
+
+            function generateDonutChart(totalDr, totalCr) {
+                const ctx = document.getElementById("donutChart").getContext("2d");
+                if (donutChart) {
+                    donutChart.destroy();
+                }
+                donutChart = new Chart(ctx, {
+                    type: "doughnut",
+                    data: {
+                        labels: ["Pricipal Amount", "Interest Amount"],
+                        datasets: [
+                            {
+                                data: [totalDr - totalCr, totalCr],
+                                backgroundColor: ["#FF6384", "#36A2EB"],
+                            },
+                        ],
+                    },
+                    options: {
+                        cutout: "70%",
+                        plugins: {
+                            tooltip: { enabled: true },
+                            legend: { position: "bottom" },
+                            title: {
+                                display: true,
+                                text: `Overall Paid: ${totalDr}`,
+                            },
+                            datalabels: {
+                                formatter: (value, context) => {
+                                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1) + "%";
+                                    return percentage;
+                                },
+                                color: "#000",
+                                font: {
+                                    weight: "bold",
+                                },
+                            },
+                        },
+                    },
+                });
+            }
+
+            function downloadCSV() {
+				const table = document.getElementById('scheduleTable');
+				let csvContent = '';
+				for (let i = 0; i < table.rows.length; i++) {
+					const row = table.rows[i];
+					const rowData = [];
+					for (let j = 0; j < row.cells.length; j++) {
+						rowData.push(row.cells[j].innerText);
+					}
+					csvContent += rowData.join(',') + '\n';
+				}
+				const blob = new Blob([csvContent], { type: 'text/csv' });
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = 'Loan_schedule.csv';
+				a.click();
+				URL.revokeObjectURL(url);
+			}
+
+            function downloadPDF() {
+				const { jsPDF } = window.jspdf;
+				const doc = new jsPDF();
+
+				// Get input details
+				const principal = document.getElementById('principal').value;
+				const businessDate = document.getElementById('businessDate').value;
+				const interestRate = document.getElementById('interestRate').value;
+				const emiAmount = document.getElementById('emiAmount').value;
+				const emiDate = document.getElementById('emiDate').value;
+				const interestAdjustment = document.getElementById('interestAdjustment').value;
+				//const interestCalcType = document.querySelector('input[name="interestCalcType"]:checked').value;
+				//const interestAdjustmentType = document.querySelector('input[name="interestAdjustmentType"]:checked').value;
+                const interestCalcType = 365;
+                const interestAdjustmentType = "floor";
+                const interestCalcDay = parseInt(document.getElementById("intCalcDay").value);
+
+				// Add input details to the PDF
+				doc.text("Loan Interest Calculator - Input Details", 14, 15);
+				doc.text(`Principal Amount: ${principal}`, 14, 25);
+				doc.text(`Principal Amount Last Modified Date: ${businessDate}`, 14, 35);
+				doc.text(`Interest Rate: ${interestRate}%`, 14, 45);
+				doc.text(`Interest Calculation Type: ${interestCalcType}`, 14, 55);
+				doc.text(`EMI Amount: ${emiAmount}`, 14, 65);
+				doc.text(`EMI Repayment Date: ${emiDate}`, 14, 75);
+				doc.text(`Interest Adjustment Amount: ${interestAdjustment}`, 14, 85);
+				doc.text(`Interest Adjustment Type: ${interestAdjustmentType}`, 14, 95);
+				doc.text(`Interest Calculation Day: ${interestCalcDay}`, 14, 105);
+
+				// Add loan statement table to the PDF
+				doc.text("Loan Statement", 14, 115);
+				doc.autoTable({
+					html: '#scheduleTable',
+					startY: 120,
+					theme: 'grid',
+					headStyles: { fillColor: [22, 160, 133] },
+					styles: { fontSize: 8 }
+				});
+
+				doc.save("Loan_schedule_" + new Date().getTime() + ".pdf");
+			}
+        </script>
+    </body>
+</html>
