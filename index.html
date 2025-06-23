@@ -225,11 +225,11 @@
             <div class="form-row">
                 <div>
                     <label for="principal">Principal Amount:</label>
-                    <input type="number" id="principal" name="principal" value="1500000" required />
+                    <input type="number" id="principal" name="principal" value="1568929" required />
                 </div>
                 <div>
                     <label for="businessDate">Last Modified Date of the Principal Amount:</label>
-                    <input type="date" id="businessDate" name="businessDate" value="2025-04-30" required />
+                    <input type="date" id="businessDate" name="businessDate" value="2025-06-30" required />
                 </div>
             </div>
             <div class="form-row">
@@ -239,7 +239,7 @@
                 </div>
                 <div>
                     <label for="emiAmount">EMI Amount:</label>
-                    <input type="number" id="emiAmount" name="emiAmount" value="25000" required />
+                    <input type="number" id="emiAmount" name="emiAmount" value="26000" required />
                 </div>
             </div>
             <div class="form-row">
@@ -253,20 +253,20 @@
                 </div>
             </div>
             <div class="form-row">
-                <div class="form-group radio-group">
-                    <label>Interest Adjustment Type:</label>
-                    <select class="adjType" style="width: calc(100% + 0px);">
-                        <option selected value="floor">Floor</option>
-                        <option value="roof">Roof</option>
+                <div>
+                    <label for="adjType">Interest Adjustment Type:</label>
+                    <select id="adjType" style="width: calc(100% + 0px);">
+                        <option selected value="Floor">Floor</option>
+                        <option value="Roof">Roof</option>
                     </select>
                     <!-- <div class="radio-options">
 					<label><input type="radio" name="interestAdjustmentType" value="floor" checked> Floor</label>
 					<label><input type="radio" name="interestAdjustmentType" value="roof"> Roof</label>
 				</div> -->
                 </div>
-                <div class="form-group radio-group">
-                    <label>Interest Calculation Type:</label>
-                    <select class="calcType" style="width: calc(100% + 0px);">
+                <div>
+                    <label for="calcType" >Interest Calculation Type:</label>
+                    <select id="calcType" style="width: calc(100% + 0px);">
                         <option value="360">30/360</option>
                         <option selected value="365">30/365</option>
                     </select>
@@ -289,37 +289,37 @@
 				</div>
             </div> -->
                 <div>
-                    <label for="addAddlPay">By clicking the below button to add n number of additional payments:</label>
+                    <label for="addAddlPay">Click the button below to add one or more additional payments:</label>
                     <div class="action-buttons">
                         <button type="button" id="addAddlPay" class="action-buttons, add-addlpay" onclick="addAddlPayment()">Add Additional Payments</button>
                     </div>
                 </div>
             </div>
-            <div>
-                <table id="addlPayTable" border="1">
-                    <thead>
-                        <tr>
-                            <th>Addl Pay No.</th>
-                            <th>Date</th>
-                            <th>Cr/Dr</th>
-                            <th>Txn Amount</th>
-                            <th>Delete</th>
-                        </tr>
-                    </thead>
-                    <tbody id="payments">
-                        <!-- <td>0</td>
-					<td><input type="date" class="payDate" value="2025-07-20"></td>
-					<td>
-						<select class="payType">
-							<option value="Dr">Dr</option>
-							<option value="Cr">Cr</option>
-						</select>
-					</td>
-					<td><input type="number" class="payAmount" value="20000"></td>
-					<td><span class="remove-btn"> X - Delete </span></td> -->
-                    </tbody>
-                </table>
-            </div>
+            
+			<table id="addlPayTable" name="addlitionalPay" style="display:none;" border="1">
+				<thead>
+					<tr>
+						<th>Addl Pay No.</th>
+						<th>Date</th>
+						<th>Cr/Dr</th>
+						<th>Txn Amount</th>
+						<th>Delete</th>
+					</tr>
+				</thead>
+				<tbody id="payments">
+					<!-- <td>0</td>
+				<td><input type="date" class="payDate" value="2025-07-20"></td>
+				<td>
+					<select class="payType">
+						<option value="Dr">Dr</option>
+						<option value="Cr">Cr</option>
+					</select>
+				</td>
+				<td><input type="number" class="payAmount" value="20000"></td>
+				<td><span class="remove-btn"> X - Delete </span></td> -->
+				</tbody>
+			</table>
+			
             <div class="action-buttons">
                 <button type="button" class="genSchd" onclick="generateSchedule()">Generate Schedule</button>
                 <button type="button" class="download-pdf" onclick="downloadPDF()">Download PDF</button>
@@ -387,6 +387,7 @@
             }
 
             function addAddlPayment() {
+				document.getElementsByName("addlitionalPay")[0].style.display = "table";
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
 					<td>${paymentCount + 1}</td>
@@ -407,6 +408,9 @@
                 element.parentElement.remove();
                 paymentCount--;
                 updateAddlPaymentLabels();
+				if(paymentCount === 0) {
+					document.getElementsByName("addlitionalPay")[0].style.display = "none";
+				}
             }
 
             function updateAddlPaymentLabels() {
@@ -456,10 +460,8 @@
                 const startDate = new Date(document.getElementById("businessDate").value);
                 const repayDay = parseInt(document.getElementById("emiDate").value);
                 const floor = parseInt(document.getElementById("interestAdjustment").value);
-                // const intCalType = document.querySelector('calcType').value;
-                // const intAdjType = document.querySelector('adjType').value;
-                const intCalType = 365;
-                const intAdjType = "floor";
+                const intCalType = document.getElementById('calcType').value;
+                const intAdjType = document.getElementById('adjType').value;
                 const interestCalcDay = parseInt(document.getElementById("intCalcDay").value);
 
                 let payments = collectAddlPayDtls();
@@ -588,7 +590,7 @@
                         //interest = (lastOutstanding * rate / intCalType * days);
 
                         consolidated_interest += interest;
-                        let txnAmt = intAdjType === "floor" ? Math.floor(consolidated_interest - floor) : Math.ceil(consolidated_interest - floor);
+                        let txnAmt = intAdjType === "Floor" ? Math.floor(consolidated_interest - floor) : Math.ceil(consolidated_interest - floor);
 
                         //outstanding += interest;
                         outstanding += txnAmt;
@@ -740,10 +742,8 @@
 				const emiAmount = document.getElementById('emiAmount').value;
 				const emiDate = document.getElementById('emiDate').value;
 				const interestAdjustment = document.getElementById('interestAdjustment').value;
-				//const interestCalcType = document.querySelector('input[name="interestCalcType"]:checked').value;
-				//const interestAdjustmentType = document.querySelector('input[name="interestAdjustmentType"]:checked').value;
-                const interestCalcType = 365;
-                const interestAdjustmentType = "floor";
+				const interestCalcType = document.getElementById('calcType').value;;
+				const interestAdjustmentType = document.getElementById('adjType').value;
                 const interestCalcDay = parseInt(document.getElementById("intCalcDay").value);
 
 				// Add input details to the PDF
